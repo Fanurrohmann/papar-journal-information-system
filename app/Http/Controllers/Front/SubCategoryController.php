@@ -10,12 +10,12 @@ use App\Helper\Helpers;
 
 class SubCategoryController extends Controller
 {
-    public function index($id)
+    public function index($slug)
     {
         Helpers::read_json();
 
-        $sub_category_data = SubCategory::where('id', $id)->first();
-        $post_data = Post::where('sub_category_id', $id)->where('status', 'acc')->orderBy('id', 'desc')->paginate(6);
+        $sub_category_data = SubCategory::where('slug', $slug)->first();
+        $post_data = Post::where('sub_category_id', $sub_category_data->id)->where('status', 'published')->orderBy('id', 'desc')->paginate(6);
         return view('front.sub_category', compact('sub_category_data', 'post_data'));
     }
 }

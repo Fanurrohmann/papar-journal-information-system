@@ -43,7 +43,7 @@ class Setting extends Model
             'news_ticker_status' => 'Show',
             'video_total' => '6',
             'video_status' => 'Show',
-            'logo' => 'logo.png',
+            'logo' => 'logo.jpg',
             'favicon' => 'favicon.ico',
             'top_bar_date_status' => 'Show',
             'top_bar_email' => 'info@example.com',

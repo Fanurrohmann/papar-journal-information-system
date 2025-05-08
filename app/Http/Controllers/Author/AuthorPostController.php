@@ -10,8 +10,11 @@ use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Subscriber;
 use App\Models\Tag;
-use Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
 
 class AuthorPostController extends Controller
 {
@@ -26,135 +29,143 @@ class AuthorPostController extends Controller
 
     public function create()
     {
+
         $sub_categories = SubCategory::with('rCategory')->get();
-        return view('author.post_create', compact('sub_categories'));
+        $tags = Tag::get();
+
+        return view('author.post_create', compact('sub_categories', 'tags'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'post_title' => 'required',
-            'post_detail' => 'required',
+            'content' => 'required',
             'post_photo' => 'required|image|mimes:jpg,jpeg,png,gif'
         ]);
 
-        $q = DB::select("SHOW TABLE STATUS LIKE 'posts'");
-        $ai_id = $q[0]->Auto_increment;
-
+        // Handle file upload
         $now = time();
         $ext = $request->file('post_photo')->extension();
         $final_name = 'post_photo_' . $now . '.' . $ext;
-        $request->file('post_photo')->move(public_path('uploads'), $final_name);
+        $request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
 
+        // Create new post
         $post = new Post();
         $post->sub_category_id = $request->sub_category_id;
         $post->post_title = $request->post_title;
-        $post->post_detail = $request->post_detail;
+        $post->post_subtitle = $request->post_subtitle;
+        $post->post_slug = $request->post_slug ?? Str::slug($request->post_title);
+        $post->content = $request->content; // Changed from post_detail to content
         $post->post_photo = $final_name;
-        $post->visitors = 1;
+        $post->photo_caption = $request->photo_caption;
+        $post->visitors = 0;
         $post->author_id = Auth::guard('author')->user()->id;
+        $post->admin_id = 1; // super admin
+        // $post->editor_id = ;
+        $post->is_share = $request->is_share ? 1 : 0;
+        $post->is_comment = $request->is_comment ? 1 : 0;
+        $post->is_featured = $request->is_featured ? 1 : 0;
+        $post->language_id = $request->language_id ?? 1; // Default to 1 if not provided
+        // $post->meta_description = $request->meta_description;
         $post->status = 'pending';
-        $post->admin_id = 0;
-        $post->is_share = $request->is_share;
-        $post->is_comment = $request->is_comment;
-        $post->language_id = $request->language_id;
+
         $post->save();
 
-        if ($request->tags != '') {
-            $tags_array_new = array_unique(array_map('trim', explode(',', $request->tags)));
-            $tag_ids = [];
-
-            foreach ($tags_array_new as $tag_name) {
-                $tag = Tag::firstOrCreate(['tag_name' => $tag_name]);
-                $tag_ids[] = $tag->id;
-            }
-
-            $post->tags()->sync($tag_ids);
+        // Handle tags
+        if ($request->tags) {
+            $post->tags()->attach($request->tags);
         }
 
-        if ($request->subscriber_send_option == 1) {
-            $subject = 'A new post is published';
-            $message = 'Hi, A new post is published on our website. Please go to see that post:<br>';
-            $message .= '<a target="_blank" href="' . route('news_detail', $ai_id) . '">';
-            $message .= $request->post_title;
-            $message .= '</a>';
+        // Sending this post to subscribers
+        // if ($request->subscriber_send_option == 1) {
+        //     $subject = 'A new post is published';
+        //     $message = 'Hi, A new post is published into our website. Please go to see that post:<br>';
+        //     $message .= '<a target="_blank" href="' . route('post.detail', $post->post_slug) . '">';
+        //     $message .= $request->post_title;
+        //     $message .= '</a>';
 
-            $subscribers = Subscriber::where('status', 'Active')->get();
-            foreach ($subscribers as $row) {
-                \Mail::to($row->email)->send(new Websitemail($subject, $message));
-            }
-        }
+        //     $subscribers = Subscriber::where('status', 'Active')->get();
+        //     foreach ($subscribers as $row) {
+        //         Mail::to($row->email)->send(new Websitemail($subject, $message));
+        //     }
+        // }
 
-        return redirect()->route('author_post_show')->with('success', 'Data is added successfully');
+        return redirect()->route('author_post_show')->with('success', 'Post was added successfully');
     }
 
     public function edit($id)
     {
-        $test = Post::where('id', $id)
-            ->where('author_id', Auth::guard('author')->user()->id)
-            ->exists();
-
-        if (!$test) {
-            return redirect()->route('author_home');
+        $post = Post::with('tags')->where('id', $id)->first();
+        // Check if post exists and belongs to current admin
+        if (!$post || $post->admin_id != Auth::guard('admin')->user()->id) {
+            return redirect()->route('admin_home');
         }
 
         $sub_categories = SubCategory::with('rCategory')->get();
-        $post_single = Post::with('tags')->findOrFail($id);
-        $existing_tags = $post_single->tags;
+        $tags = Tag::get();
 
-        return view('author.post_edit', compact('post_single', 'sub_categories', 'existing_tags'));
+        return view('author.post_edit', compact('post', 'sub_categories', 'tags'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
             'post_title' => 'required',
-            'post_detail' => 'required'
+            'content' => 'required',
         ]);
 
-        $post = Post::findOrFail($id);
+        $post = Post::where('id', $id)->first();
 
+        if (!$post) {
+            return redirect()->route('author_post_show')->with('error', 'Post not found');
+        }
+
+        // Handle file upload if a new photo is provided
         if ($request->hasFile('post_photo')) {
             $request->validate([
                 'post_photo' => 'image|mimes:jpg,jpeg,png,gif'
             ]);
 
-            if ($post->post_photo && file_exists(public_path('uploads/' . $post->post_photo))) {
-                unlink(public_path('uploads/' . $post->post_photo));
+            // Delete old photo if exists
+            if ($post->post_photo && file_exists(public_path('uploads/post_photos/' . $post->post_photo))) {
+                unlink(public_path('uploads/post_photos/' . $post->post_photo));
             }
 
             $now = time();
             $ext = $request->file('post_photo')->extension();
             $final_name = 'post_photo_' . $now . '.' . $ext;
-            $request->file('post_photo')->move(public_path('uploads'), $final_name);
+            $request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
 
             $post->post_photo = $final_name;
         }
 
+        // Update post details
         $post->sub_category_id = $request->sub_category_id;
         $post->post_title = $request->post_title;
-        $post->post_detail = $request->post_detail;
-        $post->is_share = $request->is_share;
-        $post->is_comment = $request->is_comment;
-        $post->language_id = $request->language_id;
+        $post->post_subtitle = $request->post_subtitle;
+        $post->post_slug = $request->post_slug ?? Str::slug($request->post_title);
+        $post->content = $request->content;
+        $post->photo_caption = $request->photo_caption;
+        $post->author_id = Auth::guard('author')->user()->id;
+        // $post->editor_id = $request->editor_id;
+        $post->is_share = $request->is_share ? 1 : 0;
+        $post->is_comment = $request->is_comment ? 1 : 0;
+        $post->is_featured = $request->is_featured ? 1 : 0;
+        $post->language_id = $request->language_id ?? 1; // Default to 1 if not provided
+        // $post->meta_description = $request->meta_description ?? null;
+
+
         $post->save();
 
-        // Update tags using pivot
-        if ($request->tags != '') {
-            $tags_array = array_unique(array_map('trim', explode(',', $request->tags)));
-            $tag_ids = [];
-
-            foreach ($tags_array as $tag_name) {
-                $tag = Tag::firstOrCreate(['tag_name' => $tag_name]);
-                $tag_ids[] = $tag->id;
-            }
-
-            $post->tags()->sync($tag_ids);
+        // Handle tags (sync will remove old associations and add new ones)
+        if ($request->tags) {
+            $post->tags()->sync($request->tags);
         } else {
             $post->tags()->detach();
         }
 
-        return redirect()->route('author_post_show')->with('success', 'Data is updated successfully');
+        return redirect()->route('author_post_show')->with('success', 'Post was updated successfully');
     }
 
     public function delete_tag($id, $post_id)
@@ -176,7 +187,7 @@ class AuthorPostController extends Controller
 
         $post = Post::findOrFail($id);
 
-        if ($post->post_photo && file_exists(public_path('uploads/' . $post->post_photo))) {
+        if ($post->post_photo && file_exists(public_path('uploads/post_photos' . $post->post_photo))) {
             unlink(public_path('uploads/' . $post->post_photo));
         }
 

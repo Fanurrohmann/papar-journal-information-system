@@ -1,4 +1,5 @@
 <script src="{{ asset('dist/js/jquery-3.6.0.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('dist/js/popper.min.js') }}"></script>
 <script src="{{ asset('dist/js/tooltip.js') }}"></script>
 <script src="{{ asset('dist/js/bootstrap.min.js') }}"></script>
@@ -8,9 +9,11 @@
 <script src="{{ asset('dist/js/jscolor.js') }}"></script>
 <script src="{{ asset('dist/js/bootstrap-datepicker.min.js') }}"></script>
 <script src="{{ asset('dist/js/bootstrap-timepicker.min.js') }}"></script>
+<script src="{{ asset('dist/js/daterangepicker.js') }}"></script>
 <script src="{{ asset('dist/js/bootstrap-tagsinput.min.js') }}"></script>
 <script src="{{ asset('dist/js/select2.full.min.js') }}"></script>
-<script src="{{ asset('dist/js/summernote-bs4.js') }}"></script>
+{{-- <script src="{{ asset('dist/js/summernote-bs4.js') }}"></script> --}}
+<script src="{{ asset('dist/js/summernote-bs5.min.js') }}"></script>
 <script src="{{ asset('dist/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('dist/js/dataTables.bootstrap4.min.js') }}"></script>
 <script src="{{ asset('dist/js/iziToast.min.js') }}"></script>
