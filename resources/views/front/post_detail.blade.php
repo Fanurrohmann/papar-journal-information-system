@@ -101,15 +101,19 @@
 
 @media (max-width: 576px) {
     .social-share-buttons {
-        flex-direction: column;
-        align-items: stretch;
+        justify-content: center;
+        flex-direction: row;
+        flex-wrap: wrap;
     }
-    
+
     .share-btn {
-        text-align: center;
+        flex: 0 0 calc(50% - 10px);
+        margin-bottom: 10px;
         justify-content: center;
     }
 }
+
+
 </style>
 
 <div class="page-top">

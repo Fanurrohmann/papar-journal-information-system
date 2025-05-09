@@ -238,7 +238,7 @@
                                                 <div class="photo">
                                                     <img src="{{ asset('uploads/post_photos/' . $single->post_photo) }}"
                                                         alt="">
-                                                        alt="{{$single->post_photo}}">
+                                                        <!--alt="{{$single->post_photo}}">-->
                                                 </div>
                                                 <div class="category">
                                                     <span class="badge bg-success">{{ $item->sub_category_name }}</span>
@@ -295,7 +295,7 @@
                                                     <div class="left">
                                                         <img src="{{ asset('uploads/post_photos/' . $single->post_photo) }}"
                                                             alt="">
-                                                            alt="{{$single->post_photo}}">
+                                                            <!--alt="{{$single->post_photo}}">-->
                                                     </div>
                                                     <div class="right">
                                                         <div class="category">

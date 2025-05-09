@@ -13,17 +13,23 @@
 
 <div class="sidebar">
 
+    {{-- SIDEBAR ATAS --}}
     <div class="widget">
-        @foreach ($global_sidebar_top_ad as $row)
-            <div class="ad-sidebar">
-                @if ($row->sidebar_ad_url == '')
-                    <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Iklan Sidebar">
-                @else
-                    <a href="{{ $row->sidebar_ad_url }}"></a>
-                @endif
-            </div>
-        @endforeach
+        <div class="ad-sidebar" id="sidebar-ad-top">
+            @foreach ($global_sidebar_top_ad as $index => $row)
+                <div class="sidebar-ad-item top" style="{{ $index === 0 ? '' : 'display:none;' }}">
+                    @if ($row->sidebar_ad_url == '')
+                        <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Iklan Sidebar">
+                    @else
+                        <a href="{{ $row->sidebar_ad_url }}" target="_blank">
+                            <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Iklan Sidebar">
+                        </a>
+                    @endif
+                </div>
+            @endforeach
+        </div>
     </div>
+
 
     <div class="widget">
         <div class="tag-heading">
@@ -37,13 +43,29 @@
                 })->get();
             @endphp
     
-            @foreach ($tags as $tag)
-                <div class="tag-item">
-                    <a href="{{ route('tag_post_show', $tag->slug) }}">
-                        <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
-                    </a>
+            <div class="tag-list">
+                @foreach ($tags as $index => $tag)
+                    <div class="tag-item" style="{{ $index >= 5 ? 'display: none;' : '' }}" data-tag-item>
+                        <a href="{{ route('tag_post_show', $tag->slug) }}">
+                            <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+    
+            @if ($tags->count() > 5)
+                <div class="mt-3" style="clear: both;">
+                    <button
+                        class="btn btn-sm w-100 text-secondary border border-secondary bg-white"
+                        id="toggleTagButton"
+                        onclick="toggleTagDisplay()"
+                        onmouseover="this.classList.replace('text-secondary', 'text-primary')"
+                        onmouseout="this.classList.replace('text-primary', 'text-secondary')"
+                    >
+                        Lihat Semua Tag
+                    </button>
                 </div>
-            @endforeach
+            @endif
         </div>
     </div>
 
@@ -107,7 +129,7 @@
             <div class="news-heading">
                 <h2>{{ POPULAR_RECENT_NEWS }}</h2>
             </div>
-
+    
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill"
@@ -120,7 +142,9 @@
                         aria-selected="false">{{ POPULAR_NEWS }}</button>
                 </li>
             </ul>
+    
             <div class="tab-content" id="pills-tabContent">
+                {{-- RECENT NEWS --}}
                 <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
                     @php
                         $recent_news_data = \App\Models\Post::with('rSubCategory')
@@ -129,48 +153,50 @@
                             ->where('status', 'published')
                             ->get();
                     @endphp
-                    @foreach ($recent_news_data as $item)
-                        @if ($loop->iteration > 5)
-                            @break
-                        @endif
-                        <div class="news-item">
+    
+                    @foreach ($recent_news_data as $index => $item)
+                        <div class="news-item d-flex recent-item {{ $index >= 3 ? 'd-none' : '' }}">
                             <div class="left">
-                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{ $item->post_photo}}">
-
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{ $item->post_photo }}">
                             </div>
                             <div class="right">
                                 <div class="category">
-                                    <span
-                                        class="badge bg-success">{{ optional($item->rSubCategory)->sub_category_name ?? 'Uncategorized' }}</span>
+                                    <span class="badge bg-success">
+                                        {{ optional($item->rSubCategory)->sub_category_name ?? 'Uncategorized' }}
+                                    </span>
                                 </div>
                                 <h2><a href="{{ route('news_detail', $item->post_slug) }}">{{ $item->post_title }}</a></h2>
                                 <div class="date-user">
                                     <div class="user">
-                                        @if ($item->author_id == 0)
-                                            @php
-                                                $user_data = \App\Models\Admin::where('id', $item->admin_id)->first();
-                                            @endphp
-                                        @else
-                                            @php
-                                                $user_data = \App\Models\Author::where('id', $item->author_id)->first();
-                                            @endphp
-                                        @endif
-                                        <a href="javascript:void;">
-                                            {{ optional($user_data)->name ?? 'User tidak ditemukan' }}
-                                        </a>
+                                        @php
+                                            $user_data = $item->author_id == 0
+                                                ? \App\Models\Admin::find($item->admin_id)
+                                                : \App\Models\Author::find($item->author_id);
+                                        @endphp
+                                        <a href="javascript:void(0);">{{ optional($user_data)->name ?? 'User tidak ditemukan' }}</a>
                                     </div>
                                     <div class="date">
-                                        @php
-                                            $ts = strtotime($item->updated_at);
-                                            $updated_date = date('d F, Y', $ts);
-                                        @endphp
-                                        <a href="javascript:void;">{{ $updated_date }}</a>
+                                        <a href="javascript:void(0);">{{ \Carbon\Carbon::parse($item->updated_at)->translatedFormat('d F, Y') }}</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     @endforeach
+    
+                    @if ($recent_news_data->count() > 3)
+                        <div class="mt-2 text-center">
+                            <button class="btn btn-sm w-100 text-secondary border border-secondary bg-white"
+                                id="toggleRecentBtn"
+                                onclick="toggleNews('recent')"
+                                onmouseover="this.classList.replace('text-secondary', 'text-primary')"
+                                onmouseout="this.classList.replace('text-primary', 'text-secondary')">
+                                Lihat Semua Berita
+                            </button>
+                        </div>
+                    @endif
                 </div>
+    
+                {{-- POPULAR NEWS --}}
                 <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
                     @php
                         $popular_news_data = \App\Models\Post::with('rSubCategory')
@@ -179,51 +205,51 @@
                             ->orderBy('visitors', 'desc')
                             ->get();
                     @endphp
-                    @foreach ($popular_news_data as $item)
-                        @if ($loop->iteration > 5)
-                            @break
-                        @endif
-                        <div class="news-item">
+    
+                    @foreach ($popular_news_data as $index => $item)
+                        <div class="news-item d-flex popular-item {{ $index >= 3 ? 'd-none' : '' }}">
                             <div class="left">
-                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{ $item->post_photo}}">
-
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{ $item->post_photo }}">
                             </div>
                             <div class="right">
                                 <div class="category">
-                                    <span
-                                        class="badge bg-success">{{ optional($item->rSubCategory)->sub_category_name ?? 'Uncategorized' }}</span>
+                                    <span class="badge bg-success">
+                                        {{ optional($item->rSubCategory)->sub_category_name ?? 'Uncategorized' }}
+                                    </span>
                                 </div>
                                 <h2><a href="{{ route('news_detail', $item->post_slug) }}">{{ $item->post_title }}</a></h2>
                                 <div class="date-user">
                                     <div class="user">
-                                        @if ($item->author_id == 0)
-                                            @php
-                                                $user_data = \App\Models\Admin::where('id', $item->admin_id)->first();
-                                            @endphp
-                                        @else
-                                            @php
-                                                $user_data = \App\Models\Author::where('id', $item->author_id)->first();
-                                            @endphp
-                                        @endif
-                                        <a href="javascript:void;">
-                                            {{ optional($user_data)->name ?? 'User tidak ditemukan' }}
-                                        </a>
+                                        @php
+                                            $user_data = $item->author_id == 0
+                                                ? \App\Models\Admin::find($item->admin_id)
+                                                : \App\Models\Author::find($item->author_id);
+                                        @endphp
+                                        <a href="javascript:void(0);">{{ optional($user_data)->name ?? 'User tidak ditemukan' }}</a>
                                     </div>
                                     <div class="date">
-                                        @php
-                                            $ts = strtotime($item->updated_at);
-                                            $updated_date = date('d F, Y', $ts);
-                                        @endphp
-                                        <a href="javascript:void;">{{ $updated_date }}</a>
+                                        <a href="javascript:void(0);">{{ \Carbon\Carbon::parse($item->updated_at)->translatedFormat('d F, Y') }}</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     @endforeach
+    
+                    @if ($popular_news_data->count() > 3)
+                        <div class="mt-2 text-center">
+                            <button class="btn btn-sm w-100 text-secondary border border-secondary bg-white"
+                                id="togglePopularBtn"
+                                onclick="toggleNews('popular')"
+                                onmouseover="this.classList.replace('text-secondary', 'text-primary')"
+                                onmouseout="this.classList.replace('text-primary', 'text-secondary')">
+                                Lihat Semua Berita
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
-    </div>
+    </div
 
 
 
@@ -318,17 +344,103 @@
     </div>
 
 
+    {{-- SIDEBAR BAWAH --}}
     <div class="widget">
-
-        @foreach ($global_sidebar_bottom_ad as $row)
-            <div class="ad-sidebar">
-                @if ($row->sidebar_ad_url == '')
-                    <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Advertisement">
-                @else
-                    <a href="{{ $row->sidebar_ad_url }}" alt="Advertisement"></a>
-                @endif
-            </div>
-        @endforeach
+        <div class="ad-sidebar" id="sidebar-ad-bottom">
+            @foreach ($global_sidebar_bottom_ad as $index => $row)
+                <div class="sidebar-ad-item bottom" style="{{ $index === 0 ? '' : 'display:none;' }}">
+                    @if ($row->sidebar_ad_url == '')
+                        <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Advertisement">
+                    @else
+                        <a href="{{ $row->sidebar_ad_url }}" target="_blank">
+                            <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Advertisement">
+                        </a>
+                    @endif
+                </div>
+            @endforeach
+        </div>
     </div>
 
 </div>
+
+{{-- SCRIPT ADV  --}}
+
+<script>
+    function rotateAds(selector, interval = 5000) {
+        const ads = document.querySelectorAll(selector);
+        if (ads.length <= 1) return;
+
+        let current = 0;
+        setInterval(() => {
+            ads[current].style.display = 'none';
+            current = (current + 1) % ads.length;
+            ads[current].style.display = 'block';
+        }, interval);
+    }
+
+    // Panggil fungsi untuk iklan top dan bottom
+    rotateAds('.sidebar-ad-item.top', 5000);     // sama dengan detik (5 detik)
+    rotateAds('.sidebar-ad-item.bottom', 5000);  
+</script>
+
+{{-- SCRIPT TAGS --}}
+<script>
+    let tagsExpanded = false;
+
+    function toggleTagDisplay() {
+        const tagItems = document.querySelectorAll('[data-tag-item]');
+        const toggleButton = document.getElementById('toggleTagButton');
+
+        tagItems.forEach((tag, index) => {
+            if (index >= 5) {
+                tag.style.display = tagsExpanded ? 'none' : 'block';
+            }
+        });
+
+        toggleButton.textContent = tagsExpanded ? 'Lihat Semua Tag' : 'Sembunyikan Tag';
+        tagsExpanded = !tagsExpanded;
+    }
+</script>
+
+{{-- SCRIPT Berita Populer & Terbaru --}}
+<script>
+    const toggleNews = (type) => {
+        const items = document.querySelectorAll(`.${type}-item`);
+        const button = document.getElementById(`toggle${type.charAt(0).toUpperCase() + type.slice(1)}Btn`);
+        let expanded = button.dataset.expanded === "true";
+    
+        items.forEach((el, idx) => {
+            if (idx >= 3) { // Hanya berlaku untuk item ke-4 dan seterusnya
+                if (expanded) {
+                    el.classList.add("d-none");
+                } else {
+                    el.classList.remove("d-none");
+                }
+            }
+        });
+    
+        button.textContent = expanded ? "Lihat Semua Berita" : "Sembunyikan Berita";
+        button.dataset.expanded = expanded ? "false" : "true";
+    };
+
+    const syncToggleButton = (type) => {
+        const items = document.querySelectorAll(`.${type}-item`);
+        const button = document.getElementById(`toggle${type.charAt(0).toUpperCase() + type.slice(1)}Btn`);
+
+        let isExpanded = false;
+        items.forEach((el, idx) => {
+            if (idx >= 3 && !el.classList.contains('d-none')) {
+                isExpanded = true;
+            }
+        });
+
+        button.textContent = isExpanded ? "Sembunyikan Berita" : "Lihat Semua Berita";
+        button.dataset.expanded = isExpanded ? "true" : "false";
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        syncToggleButton('recent');
+        syncToggleButton('popular');
+    });
+</script>
+
