@@ -1,5 +1,13 @@
 @extends('front.layout.app')
 
+@section('meta_tags')
+    <meta name="robots" content="index,follow">
+    
+   
+    {{-- Canonical URL --}}
+    <link rel="canonical" href="{{ url()->current() }}">
+@endsection
+
 @section('main_content')
     @if ($setting_data->news_ticker_status == 'Show')
         <div class="news-ticker-item">

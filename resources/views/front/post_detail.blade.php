@@ -5,7 +5,7 @@
 @section('meta_tags')
     <meta name="description" content="{{ $post_detail->meta_description ?? Str::limit(strip_tags($post_detail->content), 160) }}">
     <meta name="author" content="{{ $user_data->name }}">
-    <meta name="keywords" content="{{ $post_detail->getTagNamesAttribute() }}">
+    {{-- <meta name="keywords" content="{{ $post_detail->getTagNamesAttribute() }}"> --}}
     
     {{-- Open Graph / Facebook --}}
     <meta property="og:type" content="article">
@@ -17,6 +17,7 @@
     <meta property="article:modified_time" content="{{ $post_detail->updated_at }}">
     <meta property="article:section" content="{{ $post_detail->rSubCategory->sub_category_name }}">
     <meta property="article:tag" content="{{ $post_detail->getTagNamesAttribute() }}">
+    <meta name="robots" content="index,follow">
     
     {{-- Canonical URL --}}
     <link rel="canonical" href="{{ url()->current() }}">
