@@ -288,7 +288,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin:admin'])->group(funct
 Route::prefix('editor')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('editor.login');
     Route::post('/login', [AuthController::class, 'login'])->name('editor.login.submit');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('editor.logout');
+    // Route::post('/logout', [AuthController::class, 'logout'])->name('editor.logout');
 
     Route::middleware('auth:editor')->group(function () {
         Route::get('/home', [EditorPostController::class, 'dashboard'])->name('editor_home');
