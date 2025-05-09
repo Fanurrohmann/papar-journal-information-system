@@ -7,7 +7,7 @@
 @endsection
 @section('main_content')
 <div class="section-body">
-    <form action="{{ route('posts.store') }}" method="post" enctype="multipart/form-data">
+    <form action="{{ route('author_post_store') }}" method="post" enctype="multipart/form-data">
         @csrf
         <div class="row">
             <!-- KOLOM KIRI - ELEMEN PENTING -->
