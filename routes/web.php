@@ -60,6 +60,9 @@ Route::get('/terms-and-conditions', [TermsController::class, 'index'])->name('te
 Route::get('/privacy-policy', [PrivacyController::class, 'index'])->name('privacy');
 Route::get('/disclaimer', [DisclaimerController::class, 'index'])->name('disclaimer');
 
+// SiteMap
+Route::get('sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 // updated
 Route::get('/news-detail/{slug}', [PostController::class, 'detailPost'])->name('news_detail');
 
