@@ -18,23 +18,43 @@ class PostController extends Controller
 
         $tag_data = Post::findOrFail($id)->tags;
 
-        $post_detail = Post::with('rSubCategory')->where('id',$id)->where('status', 'acc')->firstOrFail();
-        if($post_detail->author_id == 0)
-        {
-            $user_data = Admin::where('id',$post_detail->admin_id)->first();
-        }
-        else
-        {
-            $user_data = Author::where('id',$post_detail->author_id)->first();
+        $post_detail = Post::with('rSubCategory')->where('id', $id)->where('status', 'published')->firstOrFail();
+        if ($post_detail->author_id == 0) {
+            $user_data = Admin::where('id', $post_detail->admin_id)->first();
+        } else {
+            $user_data = Author::where('id', $post_detail->author_id)->first();
         }
 
         // Update view count
-        $new_value = $post_detail->visitors+1;
+        $new_value = $post_detail->visitors + 1;
         $post_detail->visitors = $new_value;
         $post_detail->update();
 
-        $related_post_array = Post::with('rSubCategory')->orderBy('id','desc')->where('sub_category_id',$post_detail->sub_category_id)->where('status', 'acc')->get();
+        $related_post_array = Post::with('rSubCategory')->orderBy('id', 'desc')->where('sub_category_id', $post_detail->sub_category_id)->where('status', 'published')->get();
 
-        return view('front.post_detail', compact('post_detail','user_data','tag_data','related_post_array'));
+        return view('front.post_detail', compact('post_detail', 'user_data', 'tag_data', 'related_post_array'));
+    }
+
+    public function detailPost($slug)
+    {
+        Helpers::read_json();
+
+        $tag_data = Post::where('post_slug', $slug)->firstOrfail()?->tags;
+
+        $post_detail = Post::with('rSubCategory')->where('post_slug', $slug)->where('status', 'published')->firstOrFail();
+        if ($post_detail->author_id == 0) {
+            $user_data = Admin::where('id', $post_detail->admin_id)->first();
+        } else {
+            $user_data = Author::where('id', $post_detail->author_id)->first();
+        }
+
+        // Update view count
+        $new_value = $post_detail->visitors + 1;
+        $post_detail->visitors = $new_value;
+        $post_detail->update();
+
+        $related_post_array = Post::with('rSubCategory')->orderBy('id', 'desc')->where('sub_category_id', $post_detail->sub_category_id)->where('status', 'published')->get();
+
+        return view('front.post_detail', compact('post_detail', 'user_data', 'tag_data', 'related_post_array'));
     }
 }

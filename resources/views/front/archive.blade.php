@@ -34,7 +34,7 @@
                         <div class="col-lg-6 col-md-12">
                             <div class="category-page-post-item">
                                 <div class="photo">
-                                    <img src="{{ asset('uploads/'.$item->post_photo) }}" alt="">
+                                    <img src="{{ asset('uploads/post_photos/'.$item->post_photo) }}" alt="">
                                 </div>
                                 <div class="category">
                                     @if ($item->rSubCategory)
@@ -43,7 +43,7 @@
                                         <span class="badge bg-danger">No SubCategory</span>
                                     @endif
                                 </div>
-                                <h3><a href="{{ route('news_detail',$item->id) }}">{{ $item->post_title }}</a></h3>
+                                <h3><a href="{{ route('news_detail',$item->post_slug) }}">{{ $item->post_title }}</a></h3>
                                 <div class="date-user">
                                     <div class="user">
                                     @if($item->author_id==0)

@@ -15,16 +15,34 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
-            $table->integer('sub_category_id');
+            $table->foreignId('sub_category_id')->constrained('sub_categories')->onDelete('cascade');
             $table->string('post_title');
-            $table->text('post_detail');
+            $table->string('post_subtitle')->nullable();
+            $table->string('post_slug')->unique();
+            $table->text('content');
+            // $table->text('post_excerpt')->nullable();
             $table->string('post_photo');
-            $table->integer('visitors');
-            $table->integer('author_id');
-            $table->integer('admin_id');
-            $table->integer('is_share');
-            $table->integer('is_comment');
-            $table->integer('language_id');
+            $table->string('photo_caption')->nullable();
+            $table->integer('visitors')->default(0);
+            $table->foreignId('author_id')->nullable();
+            $table->foreignId('admin_id')->nullable();
+            $table->foreignId('editor_id')->nullable();
+
+            // SEO Fields
+            $table->string('meta_description', 160)->nullable();
+            // $table->string('focus_keywords')->nullable();
+            $table->string('schema_type')->default('NewsArticle');
+
+            // Post Options
+            $table->boolean('is_share')->default(false);
+            $table->boolean('is_comment')->default(false);
+            $table->boolean('is_featured')->default(false);
+
+            // Language and Status
+            $table->foreignId('language_id');
+            $table->enum('status', ['published', 'draft', 'pending'])->default('pending');
+            $table->timestamp('published_at')->nullable();
+
             $table->timestamps();
         });
     }

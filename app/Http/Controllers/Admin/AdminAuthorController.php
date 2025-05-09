@@ -89,7 +89,7 @@ class AdminAuthorController extends Controller
         if($request->password!='') {
             $request->validate([
                 'password' => 'required',
-                'retype_password' => 'required|same:password'
+                //'retype_password' => 'required|same:password'
             ]);
             $author->password = Hash::make($request->password);
         }

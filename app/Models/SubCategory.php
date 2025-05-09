@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class SubCategory extends Model
 {
@@ -23,12 +24,34 @@ class SubCategory extends Model
      */
     protected $fillable = [
         'sub_category_name',
+        'slug',
         'show_on_menu',
         'show_on_home',
         'sub_category_order',
         'category_id',
         'language_id'
     ];
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Auto-generate slug before saving the model
+        static::creating(function ($subCategory) {
+            $subCategory->slug = Str::slug($subCategory->sub_category_name);
+        });
+
+        static::updating(function ($subCategory) {
+            if ($subCategory->isDirty('sub_category_name')) {
+                $subCategory->slug = Str::slug($subCategory->sub_category_name);
+            }
+        });
+    }
 
     /**
      * Get the category that owns the sub-category.
@@ -44,7 +67,7 @@ class SubCategory extends Model
     public function rPost()
     {
         return $this->hasMany(Post::class)
-            ->where('status', 'acc')
+            ->where('status', 'published')
             ->orderBy('id', 'desc');
     }
 
@@ -59,7 +82,7 @@ class SubCategory extends Model
     /**
      * Scope a query to only include active sub-categories.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeActive($query)
@@ -70,7 +93,7 @@ class SubCategory extends Model
     /**
      * Scope a query to only include home-displayed sub-categories.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeShowOnHome($query)
@@ -81,7 +104,7 @@ class SubCategory extends Model
     /**
      * Get sub-categories ordered by their display order.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeOrdered($query)

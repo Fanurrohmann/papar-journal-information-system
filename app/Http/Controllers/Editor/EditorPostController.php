@@ -3,15 +3,57 @@
 namespace App\Http\Controllers\Editor;
 
 use App\Http\Controllers\Controller;
+use App\Models\Author;
+use App\Models\Editor;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\SubCategory;
 use App\Models\Language;
 use App\Models\Tag;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+
 
 class EditorPostController extends Controller
 {
+    public function dashboard()
+    {
+        // Get today's date
+        $today = Carbon::today();
+        $firstDayOfMonth = Carbon::today()->startOfMonth();
+
+        // Count posts created today
+        $today_posts_count = Post::whereDate('created_at', $today)->count();
+
+        // Count posts created this month
+        $month_posts_count = Post::whereDate('created_at', '>=', $firstDayOfMonth)
+            ->whereDate('created_at', '<=', $today)
+            ->count();
+
+        // Count visitors today (assuming visitors are tracked in posts)
+        $today_visitors = Post::whereDate('created_at', $today)->sum('visitors');
+
+        // Count visitors this month
+        $month_visitors = Post::whereDate('created_at', '>=', $firstDayOfMonth)
+            ->whereDate('created_at', '<=', $today)
+            ->sum('visitors');
+
+        // Get reporter posts that need editor approval
+        $reporter_posts = Post::with(['author', 'tags'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('editor.post_dashboard', compact(
+            'today_posts_count',
+            'month_posts_count',
+            'today_visitors',
+            'month_visitors',
+            'reporter_posts'
+        ));
+    }
+
     public function index()
     {
         $posts = Post::orderBy('created_at', 'desc')->get();
@@ -20,122 +62,168 @@ class EditorPostController extends Controller
 
     public function create()
     {
-        $sub_categories = SubCategory::with('rCategory')->get();
         $global_language_data = Language::all();
-        return view('editor.post_create', compact('sub_categories', 'global_language_data'));
+
+        $sub_categories = SubCategory::with('rCategory')->get();
+        $tags = Tag::get();
+        $editors = Editor::all();
+        $authors = Author::all();
+
+        return view('editor.post_create', compact('sub_categories', 'global_language_data', 'tags', 'editors', 'authors'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'post_title' => 'required|string|max:255',
-            'post_detail' => 'required|string',
-            'post_photo' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'sub_category_id' => 'required|exists:sub_categories,id',
-            'language_id' => 'required|exists:languages,id',
+            'post_title' => 'required',
+            'content' => 'required',
+            'post_photo' => 'required|image|mimes:jpg,jpeg,png,gif'
         ]);
 
-        $photo = $request->file('post_photo');
-        $photoName = time() . '.' . $photo->getClientOriginalExtension();
-        $photo->move(public_path('uploads'), $photoName);
+        // Handle file upload
+        $now = time();
+        $ext = $request->file('post_photo')->extension();
+        $final_name = 'post_photo_' . $now . '.' . $ext;
+        $request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
 
+        // Create new post
         $post = new Post();
-        $post->post_title = $request->post_title;
-        $post->post_detail = $request->post_detail;
-        $post->post_photo = 'uploads/' . $photoName;
         $post->sub_category_id = $request->sub_category_id;
-        $post->language_id = $request->language_id;
-        $post->editor_id = Auth::guard('editor')->id();
-        $post->status = $request->status ?? 'pending';
+        $post->post_title = $request->post_title;
+        $post->post_subtitle = $request->post_subtitle;
+        $post->post_slug = $request->post_slug ?? Str::slug($request->post_title);
+        $post->content = $request->content; // Changed from post_detail to content
+        $post->post_photo = $final_name;
+        $post->photo_caption = $request->photo_caption;
         $post->visitors = 0;
-        $post->author_id = null;
-        $post->admin_id = null;
-        $post->is_share = $request->is_share ?? 0;
-        $post->is_comment = $request->is_comment ?? 1;
-        $post->save();
+        $post->author_id = $request->author_id;
+        $post->admin_id = 1; // super admin
+        $post->editor_id = Auth::guard('editor')->user()->id;
+        $post->is_share = $request->is_share ? 1 : 0;
+        $post->is_comment = $request->is_comment ? 1 : 0;
+        $post->is_featured = $request->is_featured ? 1 : 0;
+        $post->language_id = $request->language_id ?? 1; // Default to 1 if not provided
+        $post->meta_description = $request->meta_description;
+        $post->status = $request->status;
 
-        // Simpan tags jika ada
-        if (!empty($request->tags)) {
-            $tags = array_map('trim', explode(',', $request->tags));
-
-            // Menghapus semua tag yang sudah ada
-            $post->tags()->detach();
-
-            // Menambahkan tag baru
-            foreach ($tags as $tagName) {
-                $tag = Tag::firstOrCreate(['tag_name' => $tagName]);
-                $post->tags()->attach($tag->id);
-            }
+        // Handle published_at date
+        if ($request->published_at) {
+            $post->published_at = Carbon::parse($request->published_at);
+        } elseif ($request->status === 'published') {
+            $post->published_at = Carbon::now();
         }
 
-        return redirect()->route('posts.index')->with('success', 'Berita berhasil ditambahkan.');
+        $post->save();
+
+        // Handle tags
+        if ($request->tags) {
+            $post->tags()->attach($request->tags);
+        }
+
+        // Sending this post to subscribers
+        // if ($request->subscriber_send_option == 1) {
+        //     $subject = 'A new post is published';
+        //     $message = 'Hi, A new post is published into our website. Please go to see that post:<br>';
+        //     $message .= '<a target="_blank" href="' . route('post.detail', $post->post_slug) . '">';
+        //     $message .= $request->post_title;
+        //     $message .= '</a>';
+
+        //     $subscribers = Subscriber::where('status', 'Active')->get();
+        //     foreach ($subscribers as $row) {
+        //         Mail::to($row->email)->send(new Websitemail($subject, $message));
+        //     }
+        // }
+
+        return redirect()->route('admin_post_show')->with('success', 'Post was added successfully');
     }
 
     public function edit($id)
     {
-        $post = Post::findOrFail($id);
-        $sub_categories = SubCategory::with('rCategory')->get();
-        $global_language_data = Language::all();
-        $existing_tags = $post->tags;  // Mendapatkan tags yang terhubung ke post
+        $post = Post::with('tags')->where('id', $id)->first();
+        // Check if post exists and belongs to current admin
+        if (!$post || $post->admin_id != Auth::guard('admin')->user()->id) {
+            return redirect()->route('admin_home');
+        }
 
-        return view('editor.post_edit', compact('post', 'sub_categories', 'existing_tags', 'global_language_data'));
+        $sub_categories = SubCategory::with('rCategory')->get();
+        $tags = Tag::get();
+        $editors = Editor::all();
+        $authors = Author::all();
+
+        return view('editor.post_edit', compact('post', 'sub_categories', 'tags', 'editors', 'authors'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
             'post_title' => 'required',
-            'post_detail' => 'required'
+            'content' => 'required',
         ]);
 
-        $post = Post::findOrFail($id);
+        $post = Post::where('id', $id)->first();
 
+        if (!$post) {
+            return redirect()->route('posts.index')->with('error', 'Post not found');
+        }
+
+        // Handle file upload if a new photo is provided
         if ($request->hasFile('post_photo')) {
             $request->validate([
                 'post_photo' => 'image|mimes:jpg,jpeg,png,gif'
             ]);
 
-            // 🧹 Hapus file lama jika ada
-            if ($post->post_photo && file_exists(public_path('uploads/' . $post->post_photo))) {
-                unlink(public_path('uploads/' . $post->post_photo));
+            // Delete old photo if exists
+            if ($post->post_photo && file_exists(public_path('uploads/post_photos/' . $post->post_photo))) {
+                unlink(public_path('uploads/post_photos/' . $post->post_photo));
             }
 
             $now = time();
             $ext = $request->file('post_photo')->extension();
             $final_name = 'post_photo_' . $now . '.' . $ext;
-            $request->file('post_photo')->move(public_path('uploads'), $final_name);
+            $request->file('post_photo')->move(public_path('uploads/post_photos/'), $final_name);
 
             $post->post_photo = $final_name;
         }
 
+        // Update post details
         $post->sub_category_id = $request->sub_category_id;
         $post->post_title = $request->post_title;
-        $post->post_detail = $request->post_detail;
-        $post->is_share = $request->is_share;
-        $post->is_comment = $request->is_comment;
-        $post->language_id = $request->language_id;
-        
-        $post->save();
+        $post->post_subtitle = $request->post_subtitle;
+        $post->post_slug = $request->post_slug ?? Str::slug($request->post_title);
+        $post->content = $request->content;
+        $post->photo_caption = $request->photo_caption;
+        $post->author_id = $request->author_id;
+        $post->editor_id = $request->editor_id;
+        $post->is_share = $request->is_share ? 1 : 0;
+        $post->is_comment = $request->is_comment ? 1 : 0;
+        $post->is_featured = $request->is_featured ? 1 : 0;
+        $post->language_id = $request->language_id ?? 1; // Default to 1 if not provided
+        $post->meta_description = $request->meta_description;
+        $post->status = $request->status;
 
-        // Menghapus semua tag lama dan menambahkan yang baru
-        if (!empty($request->tags)) {
-            $tags = array_map('trim', explode(',', $request->tags));
-            $post->tags()->detach();  // Menghapus semua tag yang sudah ada
-            foreach ($tags as $tagName) {
-                $tag = Tag::firstOrCreate(['tag_name' => $tagName]);
-                $post->tags()->attach($tag->id);
-            }
+        // Handle published_at date
+        if ($request->published_at) {
+            $post->published_at = Carbon::parse($request->published_at);
+        } elseif ($request->status === 'published' && !$post->published_at) {
+            $post->published_at = Carbon::now();
         }
 
         $post->save();
 
-        return redirect()->route('posts.index')->with('success', 'Data is updated successfully');
+        // Handle tags (sync will remove old associations and add new ones)
+        if ($request->tags) {
+            $post->tags()->sync($request->tags);
+        } else {
+            $post->tags()->detach();
+        }
+
+        return redirect()->route('posts.index')->with('success', 'Post was updated successfully');
     }
 
     public function approve($id)
     {
         $post = Post::findOrFail($id);
-        $post->status = 'acc';
+        $post->status = 'published';
         $post->editor_id = Auth::guard('editor')->id();
         $post->save();
 

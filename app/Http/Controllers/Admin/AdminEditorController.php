@@ -84,7 +84,7 @@ class AdminEditorController extends Controller
         if ($request->password != '') {
             $request->validate([
                 'password' => 'required',
-                'retype_password' => 'required|same:password'
+                //'retype_password' => 'required|same:password'
             ]);
             $editor->password = Hash::make($request->password);
         }

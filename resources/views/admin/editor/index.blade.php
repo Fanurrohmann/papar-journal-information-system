@@ -39,9 +39,8 @@
                                             <td class="pt_10 pb_10">
                                                 <a href="{{ route('admin.editor.edit', $row->id) }}"
                                                     class="btn btn-primary">Edit</a>
-                                                <a href="{{ route('admin.editor.destroy', $row->id) }}"
-                                                    class="btn btn-danger"
-                                                    onClick="return confirm('Are you sure?');">Delete</a>
+                                                <a href="{{ route('admin_editor_delete', $row->id) }}" 
+                                                    class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?');">Delete</a>
                                             </td>
                                         </tr>
                                     @endforeach

@@ -37,7 +37,7 @@ class ArchiveController extends Controller
 
         $post_data_archive = Post::with('rSubCategory')
             ->whereMonth('created_at', '=', $month)
-            ->whereYear('created_at', '=', $year)->where('status', 'acc')
+            ->whereYear('created_at', '=', $year)->where('status', 'published')
             ->paginate(12);
 
         $updated_date = null;

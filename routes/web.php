@@ -42,6 +42,7 @@ use App\Http\Controllers\Front\TagController;
 use App\Http\Controllers\Front\TermsController;
 use App\Http\Controllers\Author\AuthorLoginController;
 use App\Http\Controllers\Editor\AuthController;
+use App\Http\Controllers\Editor\EditorAdvertisementController;
 use App\Http\Controllers\Editor\EditorLoginController;
 use App\Http\Controllers\Editor\EditorProfileController;
 
@@ -58,8 +59,11 @@ Route::get('/faq', [FaqController::class, 'index'])->name('faq');
 Route::get('/terms-and-conditions', [TermsController::class, 'index'])->name('terms');
 Route::get('/privacy-policy', [PrivacyController::class, 'index'])->name('privacy');
 Route::get('/disclaimer', [DisclaimerController::class, 'index'])->name('disclaimer');
-Route::get('/news-detail/{id}', [PostController::class, 'detail'])->name('news_detail');
-Route::get('/category/{id}', [SubCategoryController::class, 'index'])->name('category');
+
+// updated
+Route::get('/news-detail/{slug}', [PostController::class, 'detailPost'])->name('news_detail');
+
+Route::get('/category/{slug}', [SubCategoryController::class, 'index'])->name('category');
 Route::get('/photo-gallery', [PhotoController::class, 'index'])->name('photo_gallery');
 Route::get('/video-gallery', [VideoController::class, 'index'])->name('video_gallery');
 Route::post('/subscriber', [SubscriberController::class, 'index'])->name('subscribe');
@@ -68,7 +72,7 @@ Route::post('/poll/submit', [PollController::class, 'submit'])->name('poll_submi
 Route::get('/poll/previous', [PollController::class, 'previous'])->name('poll_previous');
 Route::post('/archive/show', [ArchiveController::class, 'show'])->name('archive_show');
 Route::get('/archive/{year}/{month}', [ArchiveController::class, 'detail'])->name('archive_detail');
-Route::get('/tag/{tag_name}', [TagController::class, 'show'])->name('tag_post_show');
+Route::get('/tag/{slug}', [TagController::class, 'show'])->name('tag_post_show');
 Route::get('/login', [LoginController::class, 'index'])->name('login');
 Route::post('/login-submit', [LoginController::class, 'login_submit'])->name('login_submit');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -77,6 +81,10 @@ Route::post('/forget-password-submit', [LoginController::class, 'forget_password
 Route::get('/reset-password/{token}/{email}', [LoginController::class, 'reset_password'])->name('reset_password');
 Route::post('/reset-password-submit', [LoginController::class, 'reset_password_submit'])->name('reset_password_submit');
 Route::get('/author/logout', [LoginController::class, 'logout'])->name('author_logout');
+
+
+Route::post('/tag', [TagController::class, 'store'])->name('tags.store');
+Route::delete('/tags/{id}', [TagController::class, 'destroy'])->name('tags.destroy');
 
 
 /* Author */
@@ -264,13 +272,13 @@ Route::post('/admin/language/update-detail-submit/{id}', [AdminLanguageControlle
 
 use App\Http\Controllers\Editor\EditorPostController;
 
-Route::prefix('editor')->middleware(['auth', 'editor'])->name('editor.')->group(function () {
-    // Route::get('posts', [EditorPostController::class, 'index'])->name('posts.index');
-    // Route::get('posts/create', [EditorPostController::class, 'create'])->name('posts.create');
-    // Route::post('posts', [EditorPostController::class, 'store'])->name('posts.store');
-    // Route::get('posts/{id}/edit', [EditorPostController::class, 'edit'])->name('posts.edit');
-    // Route::put('posts/{id}', [EditorPostController::class, 'update'])->name('posts.update');
-});
+// Route::prefix('editor')->middleware(['auth', 'editor'])->name('editor.')->group(function () {
+//     // Route::get('posts', [EditorPostController::class, 'index'])->name('posts.index');
+//     // Route::get('posts/create', [EditorPostController::class, 'create'])->name('posts.create');
+//     // Route::post('posts', [EditorPostController::class, 'store'])->name('posts.store');
+//     // Route::get('posts/{id}/edit', [EditorPostController::class, 'edit'])->name('posts.edit');
+//     // Route::put('posts/{id}', [EditorPostController::class, 'update'])->name('posts.update');
+// });
 
 Route::prefix('admin')->name('admin.')->middleware(['admin:admin'])->group(function () {
     Route::resource('editor', App\Http\Controllers\Admin\AdminEditorController::class)
@@ -283,7 +291,7 @@ Route::prefix('editor')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('editor.logout');
 
     Route::middleware('auth:editor')->group(function () {
-        Route::get('/home', [EditorPostController::class, 'index'])->name('editor_home');
+        Route::get('/home', [EditorPostController::class, 'dashboard'])->name('editor_home');
 
         Route::get('posts', [EditorPostController::class, 'index'])->name('posts.index');
         Route::get('posts/create', [EditorPostController::class, 'create'])->name('posts.create');
@@ -292,8 +300,21 @@ Route::prefix('editor')->group(function () {
         Route::put('posts/{id}', [EditorPostController::class, 'update'])->name('posts.update');
         Route::post('posts/{id}/approve', [EditorPostController::class, 'approve'])->name('posts.approve');
         Route::post('/editor/posts/{id}/cancel', [EditorPostController::class, 'cancel'])->name('editor.posts.cancel');
-        Route::delete('/editor/posts/{id}', [EditorPostController::class, 'destroy'])->name('posts.destroy');
-         Route::get('posts/{post}/tags/{tag}/delete', [EditorPostController::class, 'deleteTag'])->name('editor_post_delete_tag');
+        Route::delete('/editor/posts/{id}/destroy', [EditorPostController::class, 'destroy'])->name('posts.destroy');
+        Route::get('posts/{post}/tags/{tag}/delete', [EditorPostController::class, 'deleteTag'])->name('editor_post_delete_tag');
+
+        /* Editor Advertisements */
+        Route::get('/home-advertisement', [EditorAdvertisementController::class, 'home_ad_show'])->name('editor_home_ad_show')->middleware('admin:editor');
+        Route::post('/home-advertisement-update', [EditorAdvertisementController::class, 'home_ad_update'])->name('editor_home_ad_update');
+        Route::get('/top-advertisement', [EditorAdvertisementController::class, 'top_ad_show'])->name('editor_top_ad_show')->middleware('admin:editor');
+        Route::post('/top-advertisement-update', [EditorAdvertisementController::class, 'top_ad_update'])->name('editor_top_ad_update');
+        Route::get('/sidebar-advertisement-view', [EditorAdvertisementController::class, 'sidebar_ad_show'])->name('editor_sidebar_ad_show')->middleware('admin:editor');
+        Route::get('/sidebar-advertisement-create', [EditorAdvertisementController::class, 'sidebar_ad_create'])->name('editor_sidebar_ad_create')->middleware('admin:editor');
+        Route::post('/sidebar-advertisement-store', [EditorAdvertisementController::class, 'sidebar_ad_store'])->name('editor_sidebar_ad_store');
+        Route::get('/sidebar-advertisement-edit/{id}', [EditorAdvertisementController::class, 'sidebar_ad_edit'])->name('editor_sidebar_ad_edit')->middleware('admin:editor');
+        Route::post('/sidebar-advertisement-update/{id}', [EditorAdvertisementController::class, 'sidebar_ad_update'])->name('editor_sidebar_ad_update');
+        Route::get('/sidebar-advertisement-delete/{id}', [EditorAdvertisementController::class, 'sidebar_ad_delete'])->name('editor_sidebar_ad_delete')->middleware('admin:editor');
+
 
 
         Route::get('profile/edit', [EditorProfileController::class, 'edit'])->name('profile.edit');

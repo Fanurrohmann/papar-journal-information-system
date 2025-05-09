@@ -33,13 +33,13 @@
             @php
                 $tags = \App\Models\Tag::whereHas('posts', function ($query) use ($current_language_id) {
                     $query->where('language_id', $current_language_id)
-                          ->where('status', 'acc');
+                          ->where('status', 'published');
                 })->get();
             @endphp
     
             @foreach ($tags as $tag)
                 <div class="tag-item">
-                    <a href="{{ route('tag_post_show', $tag->tag_name) }}">
+                    <a href="{{ route('tag_post_show', $tag->slug) }}">
                         <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
                     </a>
                 </div>
@@ -126,7 +126,7 @@
                         $recent_news_data = \App\Models\Post::with('rSubCategory')
                             ->where('language_id', $current_language_id)
                             ->orderBy('id', 'desc')
-                            ->where('status', 'acc')
+                            ->where('status', 'published')
                             ->get();
                     @endphp
                     @foreach ($recent_news_data as $item)
@@ -135,14 +135,14 @@
                         @endif
                         <div class="news-item">
                             <div class="left">
-                                <img src="{{ asset('uploads/' . $item->post_photo) }}" alt="">
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="">
                             </div>
                             <div class="right">
                                 <div class="category">
                                     <span
                                         class="badge bg-success">{{ optional($item->rSubCategory)->sub_category_name ?? 'Uncategorized' }}</span>
                                 </div>
-                                <h2><a href="{{ route('news_detail', $item->id) }}">{{ $item->post_title }}</a></h2>
+                                <h2><a href="{{ route('news_detail', $item->post_slug) }}">{{ $item->post_title }}</a></h2>
                                 <div class="date-user">
                                     <div class="user">
                                         @if ($item->author_id == 0)
@@ -174,7 +174,7 @@
                     @php
                         $popular_news_data = \App\Models\Post::with('rSubCategory')
                             ->where('language_id', $current_language_id)
-                            ->where('status', 'acc')
+                            ->where('status', 'published')
                             ->orderBy('visitors', 'desc')
                             ->get();
                     @endphp
@@ -184,14 +184,14 @@
                         @endif
                         <div class="news-item">
                             <div class="left">
-                                <img src="{{ asset('uploads/' . $item->post_photo) }}" alt="">
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="">
                             </div>
                             <div class="right">
                                 <div class="category">
                                     <span
                                         class="badge bg-success">{{ optional($item->rSubCategory)->sub_category_name ?? 'Uncategorized' }}</span>
                                 </div>
-                                <h2><a href="{{ route('news_detail', $item->id) }}">{{ $item->post_title }}</a></h2>
+                                <h2><a href="{{ route('news_detail', $item->post_slug) }}">{{ $item->post_title }}</a></h2>
                                 <div class="date-user">
                                     <div class="user">
                                         @if ($item->author_id == 0)

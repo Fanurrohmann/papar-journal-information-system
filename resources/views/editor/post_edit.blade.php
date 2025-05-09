@@ -1,114 +1,338 @@
 @extends('editor.layout.app')
 
-@section('heading', 'Edit Berita')
+@section('heading','Edit Post')
 
 @section('button')
-    <a href="{{ route('posts.index') }}" class="btn btn-primary"><i class="fas fa-eye"></i> Lihat Semua</a>
+<a href="{{ route('editor_home') }}" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
 @endsection
 
 @section('main_content')
-    <div class="section-body">
-        <div class="card">
-            <div class="card-body">
-                <form action="{{ route('posts.update', $post->id) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="form-group mb-3">
-                        <label>Judul Berita *</label>
-                        <input type="text" class="form-control" name="post_title" value="{{ $post->post_title }}"
-                            required>
+<div class="section-body">
+    <form action="{{ route('posts.update', $post->id) }}" method="post" enctype="multipart/form-data">
+        @csrf
+        @method('put')
+        <div class="row">
+            <!-- KOLOM KIRI - ELEMEN PENTING -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Informasi Utama</h4>
                     </div>
+                    <div class="card-body">
+                        <!-- Judul Berita -->
+                        <div class="form-group mb-3">
+                            <label>Judul Berita * <span class="text-muted">(60-70 karakter untuk SEO optimal)</span></label>
+                            <input type="text" class="form-control" name="post_title" value="{{ $post->post_title }}" required maxlength="70">
+                            <small class="text-muted character-count">{{ strlen($post->post_title) }}/70 karakter</small>
+                        </div>
 
-                    <div class="form-group mb-3">
-                        <label>Detail Berita *</label>
-                        <textarea class="form-control snote" name="post_detail" cols="30" rows="10">{{ $post->post_detail }}</textarea>
+                        <!-- Sub Judul Berita -->
+                        <div class="form-group mb-3">
+                            <label>Sub Judul Berita</label>
+                            <input type="text" class="form-control" name="post_subtitle" value="{{ $post->post_subtitle ?? '' }}" maxlength="70">
+                            <small class="text-muted character-count">{{ strlen($post->post_subtitle ?? '') }}/70 karakter</small>
+                        </div>
+                        
+                        <!-- SEO Slug -->
+                        <div class="form-group mb-3">
+                            <label>Slug URL * <span class="text-muted">(Otomatis dibuat dari judul)</span></label>
+                            <input type="text" class="form-control" name="post_slug" value="{{ $post->post_slug }}">
+                        </div>
+                        
+                        <!-- Post Content -->
+                        <div class="form-group mb-3">
+                            <label>Konten *</label>
+                            <textarea name="content" class="form-control snote content" cols="30" rows="10">{{ $post->content }}</textarea>
+                        </div>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label>Foto Lama</label><br>
-                        <img src="{{ asset('uploads/' . $post->post_photo) }}" alt="" width="200">
+                </div>
+                
+                <!-- Media Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Media</h4>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label>Ganti Foto</label>
-                        <input type="file" class="form-control" name="post_photo">
+                    <div class="card-body">
+                        <!-- Existing Media -->
+                        <div class="form-group mb-3">
+                            <label>Existing Post Photo</label>
+                            <div>
+                                <img src="{{ asset('uploads/post_photos/'.$post->post_photo) }}" alt="" style="width: 300px;">
+                            </div>
+                        </div>
+                        
+                        <!-- Media -->
+                        <div class="form-group mb-3" style="overflow: clip">
+                            <label>Change Post Photo</label>
+                            <div><input type="file" name="post_photo" accept="image/*"></div>
+                        </div>
+                        
+                        <!-- Alt Text untuk Gambar (SEO) -->
+                        <div class="form-group mb-3">
+                            <label>Caption Gambar <span class="text-muted">(Penting untuk SEO dan aksesibilitas)</span></label>
+                            <input type="text" class="form-control" name="photo_caption" value="{{ $post->photo_caption ?? '' }}">
+                        </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- KOLOM KANAN - ELEMEN TAMBAHAN -->
+            <div class="col-md-4">
+                <!-- Publikasi -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Publikasi</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Publication Status -->
+                        <div class="form-group mb-3">
+                            <label>Status Publikasi</label>
+                            <select name="status" class="form-control">
+                                <option value="published" {{ $post->status == 'published' ? 'selected' : '' }}>Publish</option>
+                                <option value="draft" {{ $post->status == 'draft' ? 'selected' : '' }}>Draft</option>
+                                <option value="pending" {{ $post->status == 'pending' ? 'selected' : '' }}>Pending Review</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Publication Date -->
+                        <div class="form-group mb-3">
+                            <label>Tanggal & Waktu Publikasi <span class="text-muted">(Kosongkan untuk waktu saat ini)</span></label>
+                            <input type="text" class="form-control datetimepicker" name="published_at" value="{{ $post->published_at ? $post->published_at->format('Y-m-d H:i') : '' }}">
+                        </div>
 
-                    <div class="form-group mb-3">
-                        <label>Kategori *</label>
-                        <select name="sub_category_id" class="form-control" required>
-                            @foreach ($sub_categories as $item)
-                                <option value="{{ $item->id }}"
-                                    {{ $post->sub_category_id == $item->id ? 'selected' : '' }}>
-                                    {{ $item->rCategory->category_name }} - {{ $item->sub_category_name }}
+                        <!-- Submit Buttons -->
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block mb-2">Update</button>
+                            {{-- <button type="button" class="btn btn-secondary btn-block" onclick="saveAsDraft()">Save as Draft</button> --}}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kategori & Tags -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Kategori & Tags</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Kategori -->
+                        <div class="form-group mb-3">
+                            <label>Kategori *</label>
+                            <select name="sub_category_id" class="form-control select2" required>
+                                <option value="">-- Pilih Category --</option>
+                                @foreach($sub_categories as $item)
+                                <option value="{{ $item->id }}" {{ $item->id == $post->sub_category_id ? 'selected' : '' }}>
+                                    {{ $item->sub_category_name }}
+                                    ({{ $item->rCategory->category_name ?? 'No Category' }})
                                 </option>
-                            @endforeach
-                        </select>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <!-- Existing Tags -->
+                        <div class="form-group mb-3">
+                            <label>Tags *</label>
+                            <div class="d-flex">
+                                <select name="tags[]" class="form-control select2" multiple required>
+                                    @foreach($tags as $item)
+                                    <option value="{{ $item->id }}" {{ in_array($item->id, $post->tags->pluck('id')->toArray()) ? 'selected' : '' }}>
+                                        {{ $item->tag_name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addTagModal" style="height: 100%">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label>Bagikan?</label>
-                        <select name="is_share" class="form-control">
-                            <option value="1" {{ $post->is_share == 1 ? 'selected' : '' }}>Ya</option>
-                            <option value="0" {{ $post->is_share == 0 ? 'selected' : '' }}>Tidak</option>
-                        </select>
+                </div>
+                
+                <!-- SEO Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>SEO Settings</h4>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label>Izin Komentar?</label>
-                        <select name="is_comment" class="form-control">
-                            <option value="1" {{ $post->is_comment == 1 ? 'selected' : '' }}>Ya</option>
-                            <option value="0" {{ $post->is_comment == 0 ? 'selected' : '' }}>Tidak</option>
-                        </select>
+                    <div class="card-body">
+                        <!-- SEO Meta Description -->
+                        <div class="form-group mb-3">
+                            <label>Meta Description * <span class="text-muted">(150-160 karakter)</span></label>
+                            <textarea name="meta_description" class="form-control" maxlength="160" style="height: 70px">{{ $post->meta_description }}</textarea>
+                            <small class="text-muted character-count">{{ strlen($post->meta_description) }}/160 karakter</small>
+                        </div>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label>Tag yang Ada</label>
-                        <table class="table table-bordered">
-                            @foreach ($existing_tags as $tag)
-                                <tr>
-                                    <td>{{ $tag->tag_name }}</td>
-                                    <td>
-                                        <a href="{{ route('editor_post_delete_tag', [$tag->id, $post->id]) }}"
-                                            onclick="return confirm('Yakin ingin menghapus tag ini?');">Hapus</a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </table>
+                </div>
+                
+                <!-- Pengaturan Tambahan -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Pengaturan Tambahan</h4>
                     </div>
+                    <div class="card-body">
+                        <!-- Editor dan Reporter -->
+                        <div class="form-group mb-3">
+                            <label>Editor *</label>
+                            <select name="editor_id" class="form-control select2" required>
+                                <option value="">-- Pilih Editor --</option>
+                                @foreach($editors as $item)
+                                    <option value="{{ $item->id }}" {{ $item->id == $post->editor_id ? 'selected' : '' }}>
+                                        {{ $item->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <div class="form-group mb-3">
-                        <label>Tag Baru</label>
-                        <input type="text" class="form-control" name="tags" value="">
-                        <small class="text-muted">Pisahkan dengan koma jika lebih dari satu. Contoh: berita, nasional,
-                            opini</small>
+                        <div class="form-group mb-3">
+                            <label>Reporter *</label>
+                            <select name="author_id" class="form-control select2" required>
+                                <option value="">-- Pilih Reporter --</option>
+                                @foreach($authors as $item)
+                                    <option value="{{ $item->id }}" {{ $item->id == $post->author_id ? 'selected' : '' }}>
+                                        {{ $item->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <!-- Interactive Options -->
+                        <div class="form-group mb-3">
+                            <label>Is Sharable?</label>
+                            <select name="is_share" class="form-control">
+                                <option value="1" {{ $post->is_share == 1 ? 'selected' : '' }}>Yes</option>
+                                <option value="0" {{ $post->is_share == 0 ? 'selected' : '' }}>No</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Allow Comments?</label>
+                            <select name="is_comment" class="form-control">
+                                <option value="1" {{ $post->is_comment == 1 ? 'selected' : '' }}>Yes</option>
+                                <option value="0" {{ $post->is_comment == 0 ? 'selected' : '' }}>No</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Featured Post?</label>
+                            <select name="is_featured" class="form-control">
+                                <option value="0" {{ $post->is_featured == 0 ? 'selected' : '' }}>No</option>
+                                <option value="1" {{ $post->is_featured == 1 ? 'selected' : '' }}>Yes</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Subscriber Notification -->
+                        <div class="form-group mb-3">
+                            <label>Send to subscribers?</label>
+                            <select name="subscriber_send_option" class="form-control">
+                                <option value="1">Yes</option>
+                                <option value="0" selected>No</option>
+                            </select>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
-                    <div class="form-group mb-3">
-                        <label>Bahasa *</label>
-                        <select name="language_id" class="form-control" required>
-                            @foreach ($global_language_data as $lang)
-                                <option value="{{ $lang->id }}"
-                                    {{ $post->language_id == $lang->id ? 'selected' : '' }}>
-                                    {{ $lang->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label>Status</label>
-                        <select name="status" class="form-control">
-                            <option value="pending" {{ $post->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="draft" {{ $post->status == 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="acc" {{ $post->status == 'acc' ? 'selected' : '' }}>ACC</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-success">Update</button>
-                </form>
+<!-- Add Tag Modal -->
+<div class="modal fade" id="addTagModal" tabindex="-1" role="dialog" aria-labelledby="addTagModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTagModalLabel">Tambah Tag Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-tag-name">Nama Tag</label>
+                    <input type="text" class="form-control" id="new-tag-name" placeholder="Masukkan nama tag baru">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="save-new-tag">Simpan</button>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('.content').summernote({
+            tabsize: 2,
+            height: 300,
+        });
+
+        $('.datetimepicker').daterangepicker({
+            locale: { format: 'YYYY-MM-DD HH:mm' },
+            singleDatePicker: true,
+            timePicker: true,
+            timePicker24Hour: true,
+        });
+    });
+
+    // JavaScript untuk menghitung karakter dan mem-preview slug
+    document.addEventListener('DOMContentLoaded', function() {
+        // Karakter counter untuk judul dan meta description
+        const textInputs = document.querySelectorAll('input[name="post_title"], input[name="post_subtitle"], textarea[name="meta_description"]');
+        textInputs.forEach(input => {
+            const counter = input.nextElementSibling;
+            if (counter && counter.classList.contains('character-count')) {
+                // Initial count
+                const charCount = input.value.length;
+                const maxLength = input.getAttribute('maxlength');
+                counter.textContent = `${charCount}/${maxLength} karakter`;
+                
+                // Update on input
+                input.addEventListener('input', function() {
+                    const charCount = this.value.length;
+                    counter.textContent = `${charCount}/${maxLength} karakter`;
+                    
+                    // Memberikan peringatan warna jika mendekati batas
+                    if (charCount > parseInt(maxLength) * 0.9) {
+                        counter.classList.add('text-danger');
+                    } else {
+                        counter.classList.remove('text-danger');
+                    }
+                });
+            }
+        });
+        
+        // Auto-generate slug dari judul
+        const titleInput = document.querySelector('input[name="post_title"]');
+        const slugInput = document.querySelector('input[name="post_slug"]');
+        
+        titleInput.addEventListener('blur', function() {
+            // if (slugInput.value === '') {
+                // Slug generation logic - convert to lowercase, replace spaces with dashes, remove special chars
+                let slug = this.value?.trim()?.toLowerCase()
+                            .replace(/[^\w\s-]/g, '')  // Remove special characters
+                            .replace(/\s+/g, '-')      // Replace spaces with dashes
+                            .replace(/-+/g, '-');      // Replace multiple dashes with single dash
+                
+                slugInput.value = slug;
+            // }
+        });
+        
+        // Save as draft function
+        window.saveAsDraft = function() {
+            const statusSelect = document.querySelector('select[name="status"]');
+            statusSelect.value = 'draft';
+            document.querySelector('form').submit();
+        };
+
+        document.getElementById('save-new-tag').addEventListener('click', function() {
+            const tagName = document.getElementById('new-tag-name').value;
+            
+            if (tagName.trim() === '') {
+                alert('Nama tag tidak boleh kosong!');
+                return;
+            }
+            
+            // AJAX request untuk menyimpan tag baru
+           
+        });
+    });
+</script>
 @endsection

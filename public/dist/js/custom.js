@@ -1,18 +1,18 @@
-(function($){
+(function ($) {
 
     "use strict";
 
     $(".inputtags").tagsinput('items');
 
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#example1').DataTable();
     });
 
     $('.icp_demo').iconpicker();
 
-    $(document).ready(function() {
-        $('.snote').summernote();
-    });
+    // $(document).ready(function() {
+    //     $('.snote').summernote();
+    // });
 
     $('.datepicker').datepicker({ format: "yyyy/mm/dd" });
     $('.timepicker').timepicker({

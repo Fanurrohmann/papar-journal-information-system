@@ -32,11 +32,11 @@ class HomeController extends Controller
         $home_ad_data = HomeAdvertisement::where('id', 1)->first();
         $setting_data = Setting::where('id', 1)->first();
 
-        // ✅ Perbaikan: hanya tampilkan post dengan status 'acc'
+        // ✅ Perbaikan: hanya tampilkan post dengan status 'published'
         $post_data = Post::with('rSubCategory')
             ->orderBy('id', 'desc')
             ->where('language_id', $current_language_id)
-            ->where('status', 'acc')
+            ->where('status', 'published')
             ->get();
 
         $sub_category_data = SubCategory::with('rPost')
@@ -48,9 +48,9 @@ class HomeController extends Controller
         $category_data = Category::orderBy('category_order', 'asc')
             ->where('language_id', $current_language_id)
             ->get();
-        
-        $tags = Tag::whereHas('posts', function($query) {
-            $query->where('status', 'acc');
+
+        $tags = Tag::whereHas('posts', function ($query) {
+            $query->where('status', 'published');
         })->get();
 
 
@@ -84,7 +84,7 @@ class HomeController extends Controller
 
         $post_data = Post::with('rSubCategory')
             ->orderBy('id', 'desc')
-            ->where('status', 'acc'); // ✅ Hanya tampilkan yang sudah disetujui
+            ->where('status', 'published'); // ✅ Hanya tampilkan yang sudah disetujui
 
         if ($request->text_item != '') {
             $post_data = $post_data->where('post_title', 'like', '%' . $request->text_item . '%');

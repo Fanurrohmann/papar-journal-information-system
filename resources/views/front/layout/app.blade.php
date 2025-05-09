@@ -9,15 +9,16 @@
 @endif
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ $current_short_name }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		
-        <meta name="description" content="">
-        <title>Jurnal Papar</title>        
+        <title>@yield('title', $global_setting_data->site_title ?? config('app.name'))</title>
+        @yield('meta_tags')
+        @yield('schema_markup')      
 		
-        <link rel="icon" type="image/png" href="{{ asset('uploads/'.$global_setting_data->favicon) }}">
+        <link rel="icon" type="image/jpg" href="{{ asset('uploads/'.$global_setting_data->favicon) }}">
 
         @include('front.layout.styles')
         
@@ -25,7 +26,7 @@
 
         <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-6212352ed76fda0a"></script>        
+        {{-- <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-6212352ed76fda0a"></script>         --}}
         
         <!-- Google Analytics -->
         @if($global_setting_data->analytic_status == 'Show')
@@ -152,7 +153,7 @@
                             <li class="menu"><a href="{{ route('login') }}">{{ $page_data->login_title }}</a></li>
                             @endif
                             
-                            <li>
+                            {{-- <li>
                                 <div class="language-switch">
                                     <form action="{{ route('front_language') }}" method="post">
                                         @csrf
@@ -163,7 +164,7 @@
                                         </select>
                                     </form>
                                 </div>
-                            </li>
+                            </li> --}}
                         </ul>
                     </div>
                 </div>
