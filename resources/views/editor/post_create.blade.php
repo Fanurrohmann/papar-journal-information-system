@@ -3,7 +3,7 @@
 @section('heading','Add Post')
 
 @section('button')
-<a href="{{ route('editor_home') }}" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
+<a href="{{ route('posts.index') }}" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
 @endsection
 @section('main_content')
 <div class="section-body">
