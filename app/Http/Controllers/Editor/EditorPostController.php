@@ -141,8 +141,8 @@ class EditorPostController extends Controller
     {
         $post = Post::with('tags')->where('id', $id)->first();
         // Check if post exists and belongs to current admin
-        if (!$post || $post->admin_id != Auth::guard('admin')->user()->id) {
-            return redirect()->route('admin_home');
+        if (empty($post)) {
+            return redirect()->back()->with('error', 'Postingan tidak ditemukan');
         }
 
         $sub_categories = SubCategory::with('rCategory')->get();
