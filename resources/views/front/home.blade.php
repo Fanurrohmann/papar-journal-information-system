@@ -41,7 +41,7 @@
                         <div class="inner">
                             <div class="photo">
                                 <div class="bg"></div>
-                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="">
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{ $item->post_photo }}">
                                 <div class="text">
                                     <div class="text-inner">
                                         <div class="category">
@@ -97,7 +97,7 @@
                         <div class="inner inner-right">
                             <div class="photo">
                                 <div class="bg"></div>
-                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="">
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{$item->post_photo}}">
                                 <div class="text">
                                     <div class="text-inner">
                                         <div class="category">
@@ -153,10 +153,10 @@
                 <div class="row">
                     <div class="col-md-12">
                         @if ($home_ad_data->above_search_ad_url == '')
-                            <img src="{{ asset('uploads/' . $home_ad_data->above_search_ad) }}" alt="">
+                            <img src="{{ asset('uploads/' . $home_ad_data->above_search_ad) }}" alt="Advertisement">
                         @else
                             <a href="{{ $home_ad_data->above_search_ad_url }}"><img
-                                    src="{{ asset('uploads/' . $home_ad_data->above_search_ad) }}" alt=""></a>
+                                    src="{{ asset('uploads/' . $home_ad_data->above_search_ad) }}" alt="Advertisement"></a>
                         @endif
                     </div>
                 </div>
@@ -238,6 +238,7 @@
                                                 <div class="photo">
                                                     <img src="{{ asset('uploads/post_photos/' . $single->post_photo) }}"
                                                         alt="">
+                                                        alt="{{$single->post_photo}}">
                                                 </div>
                                                 <div class="category">
                                                     <span class="badge bg-success">{{ $item->sub_category_name }}</span>
@@ -294,6 +295,7 @@
                                                     <div class="left">
                                                         <img src="{{ asset('uploads/post_photos/' . $single->post_photo) }}"
                                                             alt="">
+                                                            alt="{{$single->post_photo}}">
                                                     </div>
                                                     <div class="right">
                                                         <div class="category">
@@ -372,7 +374,7 @@
 
                                 <div class="item">
                                     <div class="video-thumb">
-                                        <img src="http://img.youtube.com/vi/{{ $item->video_id }}/0.jpg" alt="">
+                                        <img src="http://img.youtube.com/vi/{{ $item->video_id }}/0.jpg" alt="Video Youtube">
                                         <div class="bg"></div>
                                         <div class="icon">
                                             <a href="http://www.youtube.com/watch?v={{ $item->video_id }}"
@@ -404,10 +406,10 @@
                 <div class="row">
                     <div class="col-md-12">
                         @if ($home_ad_data->above_footer_ad_url == '')
-                            <img src="{{ asset('uploads/' . $home_ad_data->above_footer_ad) }}" alt="">
+                            <img src="{{ asset('uploads/' . $home_ad_data->above_footer_ad) }}" alt="Advertisement">
                         @else
                             <a href="{{ $home_ad_data->above_footer_ad_url }}"><img
-                                    src="{{ asset('uploads/' . $home_ad_data->above_footer_ad) }}" alt=""></a>
+                                    src="{{ asset('uploads/' . $home_ad_data->above_footer_ad) }}" alt="Advertisement"></a>
                         @endif
                     </div>
                 </div>

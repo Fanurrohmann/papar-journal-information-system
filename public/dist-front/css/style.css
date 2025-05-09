@@ -1357,6 +1357,12 @@ a:hover {
 	font-weight: 400;
 }
 
+.clearfix::after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
 
 /* Cateory Page */
 .category-page-post-item {

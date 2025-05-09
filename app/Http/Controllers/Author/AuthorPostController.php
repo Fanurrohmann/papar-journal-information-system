@@ -187,11 +187,11 @@ class AuthorPostController extends Controller
 
         $post = Post::findOrFail($id);
 
-        if ($post->post_photo && file_exists(public_path('uploads/post_photos' . $post->post_photo))) {
-            unlink(public_path('uploads/' . $post->post_photo));
-        }
+        // if ($post->post_photo && file_exists(public_path('uploads/post_photos' . $post->post_photo))) {
+        //     unlink(public_path('uploads/' . $post->post_photo));
+        // }
 
-        $post->tags()->detach();
+        // $post->tags()->detach();
         $post->delete();
 
         return redirect()->route('author_post_show')->with('success', 'Post deleted successfully');

@@ -134,7 +134,7 @@ class EditorPostController extends Controller
         //     }
         // }
 
-        return redirect()->route('admin_post_show')->with('success', 'Post was added successfully');
+        return redirect()->route('posts.index')->with('success', 'Post was added successfully');
     }
 
     public function edit($id)

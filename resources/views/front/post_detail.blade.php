@@ -3,8 +3,6 @@
 @section('title', $post_detail->post_title . ' - ' . $post_detail->rSubCategory->sub_category_name . ' | ' . config('app.name'))
 
 @section('meta_tags')
-    {{-- Primary Meta Tags --}}
-    {{-- <meta name="title" content="{{ $post_detail->post_title }}"> --}}
     <meta name="description" content="{{ $post_detail->meta_description ?? Str::limit(strip_tags($post_detail->content), 160) }}">
     <meta name="author" content="{{ $user_data->name }}">
     <meta name="keywords" content="{{ $post_detail->getTagNamesAttribute() }}">
@@ -20,13 +18,6 @@
     <meta property="article:section" content="{{ $post_detail->rSubCategory->sub_category_name }}">
     <meta property="article:tag" content="{{ $post_detail->getTagNamesAttribute() }}">
     
-    {{-- Twitter --}}
-    {{-- <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ url()->current() }}">
-    <meta property="twitter:title" content="{{ $post_detail->post_title }}">
-    <meta property="twitter:description" content="{{ $post_detail->meta_description ?? Str::limit(strip_tags($post_detail->content), 160) }}">
-    <meta property="twitter:image" content="{{ asset('uploads/post_photos/'.$post_detail->post_photo) }}"> --}}
-    
     {{-- Canonical URL --}}
     <link rel="canonical" href="{{ url()->current() }}">
 @endsection
@@ -39,6 +30,88 @@
 
 
 @section('main_content')
+<style>
+    /* Add these styles to your CSS file */
+.social-share-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 15px;
+    border-radius: 4px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.share-btn i {
+    margin-right: 8px;
+}
+
+.share-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.facebook {
+    background-color: #3b5998;
+}
+
+.twitter {
+    background-color: #1da1f2;
+}
+
+.whatsapp {
+    background-color: #25d366;
+}
+
+.telegram {
+    background-color: #0088cc;
+}
+
+.linkedin {
+    background-color: #0077b5;
+}
+
+.email {
+    background-color: #7d7d7d;
+}
+
+.copy-link {
+    background-color: #333333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .social-share-buttons {
+        justify-content: center;
+    }
+    
+    .share-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 576px) {
+    .social-share-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .share-btn {
+        text-align: center;
+        justify-content: center;
+    }
+}
+</style>
+
 <div class="page-top">
     <div class="container">
         <div class="row">
@@ -85,9 +158,10 @@
                         {{ $updated_date }}
                     </div>
                 </div>
-                <div class="main-text">
+                <div class="main-text clearfix">
                     {!! $post_detail->content !!}
                 </div>
+                <div class="clearfix"></div>
                 <div class="tag-section">
                     <h2>{{ TAGS }}</h2>
                     <div class="tag-section-content">
@@ -97,12 +171,69 @@
                     </div>
                 </div>
                 
-                @if($post_detail->is_share == 1)
+                {{-- @if($post_detail->is_share == 1)
                 <div class="share-content">
                     <h2>{{ SHARE }}</h2>
                     <div class="addthis_inline_share_toolbox"></div>
                 </div>
-                @endif
+                @endif --}}
+
+                @if($post_detail->is_share == 1)
+                    <div class="share-content">
+                        <h2>{{ SHARE }}</h2>
+                        <div class="social-share-buttons">
+                            <!-- Facebook -->
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}" target="_blank" class="share-btn facebook">
+                                <i class="fab fa-facebook-f"></i> Facebook
+                            </a>
+                            
+                            <!-- Twitter/X -->
+                            <a href="https://twitter.com/intent/tweet?url={{ urlencode(url()->current()) }}&text={{ urlencode($post_detail->post_title) }}" target="_blank" class="share-btn twitter">
+                                <i class="fab fa-twitter"></i> Twitter
+                            </a>
+                            
+                            <!-- WhatsApp -->
+                            <a href="https://wa.me/?text={{ urlencode($post_detail->post_title . ' ' . url()->current()) }}" target="_blank" class="share-btn whatsapp">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </a>
+                            
+                            <!-- Telegram -->
+                            <a href="https://t.me/share/url?url={{ urlencode(url()->current()) }}&text={{ urlencode($post_detail->post_title) }}" target="_blank" class="share-btn telegram">
+                                <i class="fab fa-telegram"></i> Telegram
+                            </a>
+                            
+                            <!-- LinkedIn -->
+                            <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode(url()->current()) }}&title={{ urlencode($post_detail->post_title) }}" target="_blank" class="share-btn linkedin">
+                                <i class="fab fa-linkedin-in"></i> LinkedIn
+                            </a>
+                            
+                            <!-- Email -->
+                            <a href="mailto:?subject={{ urlencode($post_detail->post_title) }}&body={{ urlencode('Check out this article: ' . url()->current()) }}" class="share-btn email">
+                                <i class="fas fa-envelope"></i> Email
+                            </a>
+                            
+                            <!-- Copy Link -->
+                            <a href="javascript:void(0);" onclick="copyToClipboard('{{ url()->current() }}')" class="share-btn copy-link">
+                                <i class="fas fa-link"></i> Copy Link
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Add this script at the end of your main content section -->
+                    <script>
+                    function copyToClipboard(text) {
+                        var tempInput = document.createElement('input');
+                        tempInput.value = text;
+                        document.body.appendChild(tempInput);
+                        tempInput.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(tempInput);
+                        
+                        // Show feedback
+                        alert('Link copied to clipboard!');
+                    }
+                    </script>
+                    @endif
 
                 @if($post_detail->is_comment == 1)
                 <div class="comment-fb">
@@ -123,7 +254,7 @@
                         @endif
                         <div class="item">
                             <div class="photo">
-                                <img src="{{ asset('uploads/post_photos/'.$item->post_photo) }}" alt="">
+                                <img src="{{ asset('uploads/post_photos/'.$item->post_photo) }}" alt="{{$item->post_photo}}">
                             </div>
                             <div class="category">
                                 <span class="badge bg-success">{{ $item->rSubCategory->sub_category_name }}</span>

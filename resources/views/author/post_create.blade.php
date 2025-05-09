@@ -19,16 +19,16 @@
                     <div class="card-body">
                         <!-- Judul Berita -->
                         <div class="form-group mb-3">
-                            <label>Judul Berita * <span class="text-muted">(60-70 karakter untuk SEO optimal)</span></label>
-                            <input type="text" class="form-control" name="post_title" value="{{ old('post_title') }}" required maxlength="70">
-                            <small class="text-muted character-count">0/70 karakter</small>
+                            <label>Judul Berita * <span class="text-muted">(60-110 karakter untuk SEO optimal)</span></label>
+                            <input type="text" class="form-control" name="post_title" value="{{ old('post_title') }}" required maxlength="110">
+                            <small class="text-muted character-count">0/110 karakter</small>
                         </div>
 
                         <!-- Sub Judul Berita -->
                         <div class="form-group mb-3">
                             <label>Sub Judul Berita</label>
-                            <input type="text" class="form-control" name="post_subtitle" value="{{ old('post_subtitle') }}" maxlength="70">
-                            <small class="text-muted character-count">0/70 karakter</small>
+                            <input type="text" class="form-control" name="post_subtitle" value="{{ old('post_subtitle') }}" maxlength="110">
+                            <small class="text-muted character-count">0/110 karakter</small>
                         </div>
                         
                         
@@ -245,6 +245,7 @@
 
         // Add new tag functionality
         $('#save-new-tag').on('click', function() {
+            const $saveButton = $(this);
             const tagName = $('#new-tag-name').val().trim();
             
             if (tagName === '') {
@@ -254,8 +255,8 @@
             }
             
             // Show loading indicator
-            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
-            $(this).prop('disabled', true);
+            $saveButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+            $saveButton.prop('disabled', true);
             
             // AJAX request to save the new tag
             $.ajax({
@@ -267,6 +268,10 @@
                 },
                 dataType: "json",
                 success: function(response) {
+                    // Menghilangkan spinner dan mengembalikan tombol ke keadaan awal
+                    $saveButton.html('Simpan');
+                    $saveButton.prop('disabled', false);
+                    
                     if (response.success) {
                         // Add the new tag to the select dropdown
                         const newOption = new Option(response.tag.tag_name, response.tag.id, true, true);
@@ -278,15 +283,25 @@
                         
                         // Show success notification
                         toastr.success('Tag berhasil ditambahkan!');
+
+                        // Reset the modal
+                        $('#new-tag-name').val('');
+                        $('#addTagModal').modal('hide');
+                        // Show success notification
+
                     } else {
                         $('#tag-error-message').text(response.message).show();
                         $('#new-tag-name').addClass('is-invalid');
                     }
                 },
                 error: function(xhr) {
-                    const errors = xhr.responseJSON.errors;
-                    if (errors && errors.tag_name) {
-                        $('#tag-error-message').text(errors.tag_name[0]).show();
+                    // Menghilangkan spinner dan mengembalikan tombol ke keadaan awal
+                    $saveButton.html('Simpan');
+                    $saveButton.prop('disabled', false);
+                    
+                    const message = xhr?.responseJSON?.message;
+                    if (message) {
+                        $('#tag-error-message').text(message).show();
                         $('#new-tag-name').addClass('is-invalid');
                     } else {
                         $('#tag-error-message').text('Terjadi kesalahan. Silakan coba lagi.').show();
@@ -297,6 +312,7 @@
                     // Reset button state
                     $('#save-new-tag').html('Simpan');
                     $('#save-new-tag').prop('disabled', false);
+
                 }
             });
         });

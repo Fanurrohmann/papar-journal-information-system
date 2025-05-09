@@ -27,7 +27,7 @@ class AuthorProfileController extends Controller
         if ($request->password != '') {
             $request->validate([
                 'password' => 'required',
-                'retype_password' => 'required|same:password'
+                'retype_password' => 'nullable|same:password'
             ]);
             $author_data->password = Hash::make($request->password);
         }

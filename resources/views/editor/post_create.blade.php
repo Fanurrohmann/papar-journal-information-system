@@ -19,16 +19,16 @@
                     <div class="card-body">
                         <!-- Judul Berita -->
                         <div class="form-group mb-3">
-                            <label>Judul Berita * <span class="text-muted">(60-70 karakter untuk SEO optimal)</span></label>
-                            <input type="text" class="form-control" name="post_title" value="{{ old('post_title') }}" required maxlength="70">
-                            <small class="text-muted character-count">0/70 karakter</small>
+                            <label>Judul Berita * <span class="text-muted">(60-110 karakter untuk SEO optimal)</span></label>
+                            <input type="text" class="form-control" name="post_title" value="{{ old('post_title') }}" required maxlength="110">
+                            <small class="text-muted character-count">0/110 karakter</small>
                         </div>
 
                         <!-- Sub Judul Berita -->
                         <div class="form-group mb-3">
                             <label>Sub Judul Berita</label>
-                            <input type="text" class="form-control" name="post_subtitle" value="{{ old('post_subtitle') }}" maxlength="70">
-                            <small class="text-muted character-count">0/70 karakter</small>
+                            <input type="text" class="form-control" name="post_subtitle" value="{{ old('post_subtitle') }}" maxlength="110">
+                            <small class="text-muted character-count">0/110 karakter</small>
                         </div>
                         
                         <!-- SEO Slug -->
@@ -122,7 +122,7 @@
                         <div class="form-group mb-3">
                             <label>Tags *</label>
                             <div class="d-flex">
-                                <select name="tags[]" class="form-control select2" multiple required>
+                                <select name="tags[]" class="form-control select2" id="tags-select" multiple required>
                                     <option value="">-- Pilih Tag --</option>
                                     @foreach($tags as $item)
                                     <option value="{{ $item->id }}" {{ old('tags') == $item->id ? 'selected' : '' }}>
@@ -238,6 +238,7 @@
                 <div class="form-group">
                     <label for="new-tag-name">Nama Tag</label>
                     <input type="text" class="form-control" id="new-tag-name" placeholder="Masukkan nama tag baru">
+                    <div class="invalid-feedback" id="tag-error-message"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -247,6 +248,7 @@
         </div>
     </div>
 </div>
+
 <script>
      $(document).ready(function() {
         $('.content').summernote({
@@ -311,16 +313,80 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('form').submit();
     };
 
-    document.getElementById('save-new-tag').addEventListener('click', function() {
-        const tagName = document.getElementById('new-tag-name').value;
+
+    // Add new tag functionality
+    $('#save-new-tag').on('click', function() {
+        const $saveButton = $(this);
+        const tagName = $('#new-tag-name').val().trim();
         
-        if (tagName.trim() === '') {
-            alert('Nama tag tidak boleh kosong!');
+        if (tagName === '') {
+            $('#tag-error-message').text('Nama tag tidak boleh kosong!').show();
+            $('#new-tag-name').addClass('is-invalid');
             return;
         }
         
-        // AJAX request untuk menyimpan tag baru
-       
+        // Show loading indicator
+        $saveButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+        $saveButton.prop('disabled', true);
+        
+        // AJAX request to save the new tag
+        $.ajax({
+            url: "{{ route('tags.store') }}",
+            type: "POST",
+            data: {
+                "_token": "{{ csrf_token() }}",
+                "tag_name": tagName
+            },
+            dataType: "json",
+            success: function(response) {
+                // Menghilangkan spinner dan mengembalikan tombol ke keadaan awal
+                $saveButton.html('Simpan');
+                $saveButton.prop('disabled', false);
+                
+                if (response.success) {
+                    // Add the new tag to the select dropdown
+                    const newOption = new Option(response.tag.tag_name, response.tag.id, true, true);
+                    $('#tags-select').append(newOption).trigger('change');
+                    // Reset the modal
+                    $('#new-tag-name').val('');
+                    $('#addTagModal').modal('hide');
+                    // Show success notification
+                } else {
+                    $('#tag-error-message').text(response.message).show();
+                    $('#new-tag-name').addClass('is-invalid');
+                }
+            },
+            error: function(xhr) {
+                // Menghilangkan spinner dan mengembalikan tombol ke keadaan awal
+                $saveButton.html('Simpan');
+                $saveButton.prop('disabled', false);
+                
+                const message = xhr?.responseJSON?.message;
+                if (message) {
+                    $('#tag-error-message').text(message).show();
+                    $('#new-tag-name').addClass('is-invalid');
+                } else {
+                    $('#tag-error-message').text('Terjadi kesalahan. Silakan coba lagi.').show();
+                    $('#new-tag-name').addClass('is-invalid');
+                }
+            }
+        });
+    });
+    
+    // Reset validation state when modal is hidden
+    $('#addTagModal').on('hidden.bs.modal', function() {
+        $('#new-tag-name').removeClass('is-invalid');
+        $('#tag-error-message').hide();
+        $('#new-tag-name').val('');
+    });
+    
+    // Allow submitting the tag form with Enter key
+    $('#new-tag-name').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#save-new-tag').click();
+        }
+
     });
 });
 </script>

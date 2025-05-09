@@ -34,7 +34,7 @@
                         <div class="col-lg-6 col-md-12">
                             <div class="category-page-post-item">
                                 <div class="photo">
-                                    <img src="{{ asset('uploads/post_photos/'.$item->post_photo) }}" alt="">
+                                    <img src="{{ asset('uploads/post_photos/'.$item->post_photo) }}" alt="{{$item->post_photo}}">
                                 </div>
                                 <div class="category">
                                     @if ($item->rSubCategory)

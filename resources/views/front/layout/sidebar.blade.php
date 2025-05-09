@@ -17,9 +17,9 @@
         @foreach ($global_sidebar_top_ad as $row)
             <div class="ad-sidebar">
                 @if ($row->sidebar_ad_url == '')
-                    <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="">
+                    <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Iklan Sidebar">
                 @else
-                    <a href="{{ $row->sidebar_ad_url }}" alt=""></a>
+                    <a href="{{ $row->sidebar_ad_url }}"></a>
                 @endif
             </div>
         @endforeach
@@ -135,7 +135,8 @@
                         @endif
                         <div class="news-item">
                             <div class="left">
-                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="">
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{ $item->post_photo}}">
+
                             </div>
                             <div class="right">
                                 <div class="category">
@@ -184,7 +185,8 @@
                         @endif
                         <div class="news-item">
                             <div class="left">
-                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="">
+                                <img src="{{ asset('uploads/post_photos/' . $item->post_photo) }}" alt="{{ $item->post_photo}}">
+
                             </div>
                             <div class="right">
                                 <div class="category">
@@ -321,9 +323,9 @@
         @foreach ($global_sidebar_bottom_ad as $row)
             <div class="ad-sidebar">
                 @if ($row->sidebar_ad_url == '')
-                    <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="">
+                    <img src="{{ asset('uploads/' . $row->sidebar_ad) }}" alt="Advertisement">
                 @else
-                    <a href="{{ $row->sidebar_ad_url }}" alt=""></a>
+                    <a href="{{ $row->sidebar_ad_url }}" alt="Advertisement"></a>
                 @endif
             </div>
         @endforeach

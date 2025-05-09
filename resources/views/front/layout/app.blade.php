@@ -177,7 +177,7 @@
                     <div class="col-md-4 d-flex align-items-center">
                         <div class="logo">
                             <a href="{{ route('home') }}">
-                                <img src="{{ asset('uploads/'.$global_setting_data->logo) }}" alt="">
+                                <img src="{{ asset('uploads/'.$global_setting_data->logo) }}" alt="Logo Jurnal Papar">
                             </a>
                         </div>
                     </div>
@@ -186,9 +186,9 @@
                         @if ($global_top_ad_data->top_ad_status == 'Show')
                         <div class="ad-section-1">
                             @if($global_top_ad_data->top_ad_url == '')
-                            <img src="{{ asset('uploads/'.$global_top_ad_data->top_ad) }}" alt="">
+                            <img src="{{ asset('uploads/'.$global_top_ad_data->top_ad) }}" alt="Advertisement">
                             @else
-                            <a href="{{ $global_top_ad_data->top_ad_url }}"><img src="{{ asset('uploads/'.$global_top_ad_data->top_ad) }}" alt=""></a>
+                            <a href="{{ $global_top_ad_data->top_ad_url }}"><img src="{{ asset('uploads/'.$global_top_ad_data->top_ad) }}" alt="Advertisement"></a>
                             @endif
                         </div>
                         @endif
