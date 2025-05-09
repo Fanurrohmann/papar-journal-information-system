@@ -194,16 +194,20 @@ class AdminPostController extends Controller
 
     public function delete($id)
     {
-        $test = Post::where('id', $id)->where('admin_id', Auth::guard('admin')->user()->id)->count();
-        if (!$test) {
+        // $test = Post::where('id', $id)->where('admin_id', Auth::guard('admin')->user()->id)->count();
+        // if (!$test) {
+        //     return redirect()->route('admin_home');
+        // }
+
+        $post = Post::where('id', $id)->first();
+        if (empty($post)) {
             return redirect()->route('admin_home');
         }
 
-        $post = Post::where('id', $id)->first();
-        unlink(public_path('uploads/' . $post->post_photo));
+        // unlink(public_path('uploads/' . $post->post_photo));
         $post->delete();
 
-        Tag::where('post_id', $id)->delete();
+        // Tag::where('post_id', $id)->delete();
 
         return redirect()->route('admin_post_show')->with('success', 'Data is deleted successfully');
     }

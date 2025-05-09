@@ -73,7 +73,7 @@
                                             <div class="d-flex">
                                                 <a href="{{ route('author_post_edit', $post->id) }}"
                                                     class="btn btn-sm btn-primary me-1">Edit</a>
-                                                <form method="POST" action="{{ route('posts.destroy', $post->id) }}"
+                                                <form method="POST" action="{{ route('author_post_delete', $post->id) }}"
                                                     class="d-inline"
                                                     onsubmit="return confirm('Yakin ingin menghapus berita ini?');">
                                                     @csrf

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('post_title');
             $table->string('post_subtitle')->nullable();
             $table->string('post_slug')->unique();
-            $table->text('content');
+            $table->longText('content');
             // $table->text('post_excerpt')->nullable();
             $table->string('post_photo');
             $table->string('photo_caption')->nullable();

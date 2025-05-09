@@ -101,7 +101,7 @@ Route::get('/author/post/create', [AuthorPostController::class, 'create'])->name
 Route::post('/author/post/store', [AuthorPostController::class, 'store'])->name('author_post_store');
 Route::get('/author/post/edit/{id}', [AuthorPostController::class, 'edit'])->name('author_post_edit')->middleware('author:author');
 Route::post('/author/post/update/{id}', [AuthorPostController::class, 'update'])->name('author_post_update');
-Route::get('/author/post/delete/{id}', [AuthorPostController::class, 'delete'])->name('author_post_delete')->middleware('author:author');
+Route::delete('/author/post/delete/{id}', [AuthorPostController::class, 'delete'])->name('author_post_delete')->middleware('author:author');
 Route::get('/author/post/tag/delete/{id}/{id1}', [AuthorPostController::class, 'delete_tag'])->name('author_post_delete_tag')->middleware('author:author');
 
 /* Admin */
